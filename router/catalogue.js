@@ -5,9 +5,15 @@ const db = require('../db');
 
 router.get('/api/catalogue/list', async (ctx, next) => {
   let sql = 'SELECT * FROM catalogue WHERE isDelect=0 order by updateTime desc';
-  await db(sql).then(res => {
+  await db(sql).then(async res => {
+    let data = []
+    for (const item of res) {
+      let sql2 =  `SELECT * FROM article WHERE isDelect=0 and catalogueId = ${item.catalogueId}`
+      let result2 = await db(sql2).then(res => { return res })
+      data.push({...item,articleCount:result2?result2.length:0})
+    }
     Utils.handleMessage(ctx, {
-      ...Tips[1000], data: res
+      ...Tips[1000], data
     })
   }).catch(e => {
     Utils.handleMessage(ctx, Tips[2000], e)
