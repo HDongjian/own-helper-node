@@ -37,7 +37,7 @@ router.get('/api/article/page', async (ctx, next) => {
     articleName,
     catalogueId
   } = data
-  let sql = 'SELECT * FROM article WHERE isDelect=0 and userId=' + userId;
+  let sql = 'SELECT articleId,articleName,catalogueId,createTime,description,subjectId,updateTime FROM article WHERE isDelect=0 and userId=' + userId;
   let totalsql = 'SELECT count(*) from article where isDelect=0 and userId=' + userId;
   if (articleName) {
     sql += ` and articleName like '%${articleName}%'`
@@ -89,6 +89,20 @@ router.post('/api/article/add', async (ctx, next) => {
     Utils.handleMessage(ctx, Tips[2000], e)
   });
 })  
+
+router.get('/api/article/:id', async (ctx, next) => {
+  let {userId} = ctx.state || {};
+  let id = ctx.request.url.replace('/api/article/', '')
+  let sql = `SELECT * FROM article WHERE isDelect=0 and userId=${userId} and articleId=${id}`;
+  await db(sql).then(res => {
+    Utils.handleMessage(ctx, {
+      ...Tips[1000],
+      data: res[0]||{}
+    })
+  }).catch(e => {
+    Utils.handleMessage(ctx, Tips[2000], e)
+  })
+})
 
 router.post('/api/article/update/:id', async (ctx, next) => {
   let sql = Utils.getUpdateSql(ctx.request, 'article', 'articleId')

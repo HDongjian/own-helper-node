@@ -33,7 +33,7 @@ module.exports = {
   },
   2001: {
     code: 300,
-    message: '名称重复'
+    message: '该目录下名称重复'
   },
   2002: {
     code: 300,
@@ -45,9 +45,9 @@ module.exports = {
   },
   2004: {
     code: 300,
-    message: '该目录下文章项不能删除'
+    message: '该目录下文章不能删除'
   },
-  2004: {
+  2006: {
     code: 300,
     message: '该角色有用户绑定，不能删除'
   },

@@ -4,14 +4,15 @@ const Tips = require('../utils/tip');
 const db = require('../db');
 
 router.get('/api/catalogue/list', async (ctx, next) => {
-  let sql = 'SELECT * FROM catalogue WHERE isDelect=0 order by updateTime desc';
+  let sql = 'SELECT * FROM catalogue WHERE isDelect=0';
   await db(sql).then(async res => {
     let data = []
     for (const item of res) {
-      let sql2 =  `SELECT * FROM article WHERE isDelect=0 and catalogueId = ${item.catalogueId}`
+      let sql2 =  `SELECT catalogueId FROM article WHERE isDelect=0 and catalogueId = ${item.catalogueId}`
       let result2 = await db(sql2).then(res => { return res })
       data.push({...item,articleCount:result2?result2.length:0})
     }
+    data = data.sort((x,y)=>{y.orderNo-x.orderNo})
     Utils.handleMessage(ctx, {
       ...Tips[1000], data
     })
@@ -23,9 +24,9 @@ router.get('/api/catalogue/list', async (ctx, next) => {
 router.post('/api/catalogue/add', async (ctx, next) => {
   const data = ctx.request.body;
   let now = Utils.formatCurrentTime()
-  const sql = 'SELECT * FROM catalogue WHERE catalogueName=' + JSON.stringify(data.catalogueName);
-  const sqlAdd = 'INSERT INTO catalogue (catalogueParentId,catalogueName, createTime, updateTime,isDelect) VALUES (?,?,?,?,?)';
-  const sqlData = [data.catalogueParentId||'0',data.catalogueName, now, now, 0];
+  const sql = `SELECT * FROM catalogue WHERE catalogueName=${JSON.stringify(data.catalogueName)} and catalogueParentId=${data.catalogueParentId}`;
+  const sqlAdd = 'INSERT INTO catalogue (catalogueParentId,catalogueName,orderNo, createTime, updateTime,isDelect) VALUES (?,?,?,?,?,?)';
+  const sqlData = [data.catalogueParentId||'0',data.catalogueName,data.orderNo, now, now, 0];
   let result = await db(sql).then(res => { return res })
   if (result.length == 0) {
     await db(sqlAdd, sqlData).then(() => {
@@ -58,7 +59,7 @@ router.post('/api/catalogue/delect/:id', async (ctx, next) => {
   let sql2 =  `SELECT * FROM article WHERE isDelect=0 and catalogueId = ${id}`
   let result2 = await db(sql2).then(res => { return res })
   if(result2.length>0){
-    Utils.handleMessage(ctx, Tips[2004])
+    Utils.handleMessage(ctx, Tips[2006])
     return
   }
   const SQL = 'UPDATE catalogue SET isDelect=1 WHERE catalogueId=' + id
